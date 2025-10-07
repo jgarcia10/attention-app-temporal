@@ -313,13 +313,21 @@ def fast_camera_test():
         results = []
         for camera_id in range(3):
             print(f"⚡ Testing camera {camera_id}...")
-            success, backend = fast_manager.test_camera_fast(camera_id)
-            results.append({
-                "camera_id": camera_id,
-                "available": success,
-                "backend": backend
-            })
-            print(f"✅ Camera {camera_id}: {success} ({backend})")
+            try:
+                success, backend = fast_manager.test_camera_fast(camera_id)
+                results.append({
+                    "camera_id": camera_id,
+                    "available": success,
+                    "backend": backend
+                })
+                print(f"✅ Camera {camera_id}: {success} ({backend})")
+            except Exception as e:
+                print(f"❌ Camera {camera_id} exception: {e}")
+                results.append({
+                    "camera_id": camera_id,
+                    "available": False,
+                    "backend": f"Error: {e}"
+                })
         
         print(f"✅ Fast camera test completed: {results}")
         
@@ -329,8 +337,64 @@ def fast_camera_test():
         })
     except Exception as e:
         print(f"❌ Error in fast camera test: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify(ErrorResponse(
             error="FastCameraTestError",
+            message=str(e),
+            timestamp=time.time()
+        ).model_dump()), 500
+
+@app.route('/api/cameras/simple-test', methods=['GET'])
+def simple_camera_test():
+    """Ultra-simple camera test endpoint"""
+    try:
+        print("🔧 Simple camera test endpoint called...")
+        
+        import cv2
+        
+        results = []
+        for camera_id in range(3):
+            print(f"🔧 Simple test camera {camera_id}...")
+            try:
+                # Ultra-simple test
+                cap = cv2.VideoCapture(camera_id)
+                if cap.isOpened():
+                    ret, frame = cap.read()
+                    cap.release()
+                    available = ret and frame is not None
+                    backend = "Simple"
+                else:
+                    available = False
+                    backend = "Failed to open"
+                
+                results.append({
+                    "camera_id": camera_id,
+                    "available": available,
+                    "backend": backend
+                })
+                print(f"✅ Camera {camera_id}: {available} ({backend})")
+                
+            except Exception as e:
+                print(f"❌ Camera {camera_id} exception: {e}")
+                results.append({
+                    "camera_id": camera_id,
+                    "available": False,
+                    "backend": f"Error: {e}"
+                })
+        
+        print(f"✅ Simple camera test completed: {results}")
+        
+        return jsonify({
+            "cameras": results,
+            "timestamp": time.time()
+        })
+    except Exception as e:
+        print(f"❌ Error in simple camera test: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify(ErrorResponse(
+            error="SimpleCameraTestError",
             message=str(e),
             timestamp=time.time()
         ).model_dump()), 500
