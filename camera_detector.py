@@ -7,14 +7,14 @@ import platform
 import subprocess
 import re
 from typing import List, Dict, Any
-from services.robust_camera_manager import RobustCameraManager
+from services.simple_camera_manager import SimpleCameraManager
 
 
 class CameraDetector:
     def __init__(self):
         """Initialize camera detector"""
         self.available_cameras = []
-        self.robust_camera_manager = RobustCameraManager()
+        self.simple_camera_manager = SimpleCameraManager()
         self.camera_info = {}
     
     def detect_cameras(self, max_cameras: int = 5) -> List[Dict[str, Any]]:
@@ -212,14 +212,14 @@ class CameraDetector:
         Returns:
             True if camera is available and working
         """
-        print(f"🧪 Testing camera {camera_id} with robust manager...")
-        success, strategy = self.robust_camera_manager.test_camera_with_multiple_strategies(camera_id, timeout=5)
+        print(f"🧪 Testing camera {camera_id} with simple manager...")
+        success, backend = self.simple_camera_manager.test_camera_simple(camera_id, timeout=5)
         
         if success:
-            print(f"✅ Camera {camera_id} test passed with {strategy}")
+            print(f"✅ Camera {camera_id} test passed with {backend}")
             return True
         else:
-            print(f"❌ Camera {camera_id} test failed: {strategy}")
+            print(f"❌ Camera {camera_id} test failed: {backend}")
             return False
     
     def get_camera_info(self, camera_id: int, timeout: int = 15) -> Dict[str, Any]:
@@ -233,5 +233,5 @@ class CameraDetector:
         Returns:
             Camera information dictionary
         """
-        print(f"📋 Getting robust info for camera {camera_id}...")
-        return self.robust_camera_manager.get_camera_info_robust(camera_id, timeout)
+        print(f"📋 Getting simple info for camera {camera_id}...")
+        return self.simple_camera_manager.get_camera_info_simple(camera_id, timeout)

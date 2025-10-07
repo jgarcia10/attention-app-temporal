@@ -10,7 +10,7 @@ from typing import Generator, Optional, Dict, List, Any
 from core.pipeline import AttentionPipeline
 from services.isolated_camera_processor import IsolatedMultiCameraManager
 from services.video_recorder import VideoRecorder, MultiCameraVideoRecorder
-from services.robust_camera_manager import RobustCameraManager
+from services.simple_camera_manager import SimpleCameraManager
 
 
 class MultiCameraStreamer:
@@ -33,7 +33,7 @@ class MultiCameraStreamer:
         # Initialize video recorders
         self.video_recorder = VideoRecorder()
         self.multi_camera_recorder = MultiCameraVideoRecorder()
-        self.robust_camera_manager = RobustCameraManager()
+        self.simple_camera_manager = SimpleCameraManager()
     
     def _initialize_camera_with_timeout(self, camera_id: int, width: int, height: int, fps: int, timeout: int = 10) -> Optional[cv2.VideoCapture]:
         """Initialize camera with timeout to prevent hanging"""
@@ -41,15 +41,15 @@ class MultiCameraStreamer:
         
         def init_camera():
             try:
-                # Use robust camera manager for initialization
-                print(f"🚀 Using robust camera manager for camera {camera_id}...")
-                cap = self.robust_camera_manager.initialize_camera_robust(camera_id, width, height, fps, timeout)
+                # Use simple camera manager for initialization
+                print(f"🚀 Using simple camera manager for camera {camera_id}...")
+                cap = self.simple_camera_manager.initialize_camera_simple(camera_id, width, height, fps, timeout)
                 
                 if cap:
-                    print(f"✅ Camera {camera_id} initialized successfully with robust manager")
+                    print(f"✅ Camera {camera_id} initialized successfully with simple manager")
                     return cap
                 else:
-                    print(f"❌ Camera {camera_id} failed robust initialization")
+                    print(f"❌ Camera {camera_id} failed simple initialization")
                     return None
                     
             except Exception as e:

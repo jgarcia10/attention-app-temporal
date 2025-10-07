@@ -66,12 +66,11 @@ class RobustCameraManager:
             print(f"❌ Error with Windows camera driver reset: {e}")
     
     def test_camera_with_multiple_strategies(self, camera_id: int, timeout: int = 10) -> Tuple[bool, str]:
-        """Test camera with multiple strategies"""
+        """Test camera with multiple strategies (simplified)"""
+        # Since simple tests work, try the most common strategies first
         strategies = [
             ("Direct OpenCV", self._test_direct_opencv),
             ("DirectShow Backend", self._test_directshow_backend),
-            ("Media Foundation Backend", self._test_media_foundation_backend),
-            ("V4L2 Backend", self._test_v4l2_backend),
             ("Any Backend", self._test_any_backend)
         ]
         
