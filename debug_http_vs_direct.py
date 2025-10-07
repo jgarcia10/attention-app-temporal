@@ -39,14 +39,16 @@ def test_http_execution():
         start_time = time.time()
         
         try:
-            response = requests.get(f"{base_url}/api/cameras/{camera_id}/test", timeout=10)
+            # Use longer timeout for camera 2, shorter for others
+            timeout = 120 if camera_id == 2 else 30
+            response = requests.get(f"{base_url}/api/cameras/{camera_id}/test", timeout=timeout)
             end_time = time.time()
             
             print(f"⏱️ HTTP execution time: {end_time - start_time:.2f} seconds")
             
             if response.status_code == 200:
                 data = response.json()
-                print(f"✅ Camera {camera_id}: {data['available']}")
+                print(f"✅ Camera {camera_id}: {data['available']} (backend: {data.get('backend', 'unknown')})")
             else:
                 print(f"❌ Camera {camera_id} failed: {response.status_code}")
         except Exception as e:
@@ -65,7 +67,8 @@ def test_fast_endpoint():
     start_time = time.time()
     
     try:
-        response = requests.get(f"{base_url}/api/cameras/fast-test", timeout=15)
+        # Use longer timeout for fast endpoint since it tests all cameras
+        response = requests.get(f"{base_url}/api/cameras/fast-test", timeout=180)
         end_time = time.time()
         
         print(f"⏱️ Fast endpoint time: {end_time - start_time:.2f} seconds")
@@ -75,7 +78,7 @@ def test_fast_endpoint():
             cameras = data.get('cameras', [])
             print(f"✅ Fast endpoint successful:")
             for cam in cameras:
-                print(f"  - Camera {cam['camera_id']}: {cam['available']} ({cam['backend']})")
+                print(f"  - Camera {cam['camera_id']}: {cam['available']} ({cam['backend']}) - timeout: {cam.get('timeout_used', 'unknown')}s")
         else:
             print(f"❌ Fast endpoint failed: {response.status_code}")
             print(f"Response: {response.text}")

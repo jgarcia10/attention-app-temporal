@@ -273,16 +273,20 @@ def get_all_available_cameras():
 
 @app.route('/api/cameras/<int:camera_id>/test', methods=['GET'])
 def test_camera(camera_id):
-    """Test if a specific camera is available (fast version)"""
+    """Test if a specific camera is available (with extended timeout)"""
     try:
-        print(f"⚡ Fast test camera {camera_id}...")
+        print(f"⚡ Testing camera {camera_id} with extended timeout...")
         
-        # Use fast camera manager
-        from services.fast_camera_manager import FastCameraManager
-        fast_manager = FastCameraManager()
+        # Use simple camera manager with longer timeout for better reliability
+        from services.simple_camera_manager import SimpleCameraManager
+        simple_manager = SimpleCameraManager()
         
-        is_available, backend = fast_manager.test_camera_fast(camera_id)
-        camera_info = fast_manager.get_camera_info_fast(camera_id)
+        # Use longer timeout based on camera ID (camera 2 needs more time)
+        timeout = 30 if camera_id == 2 else 15
+        print(f"⏱️ Using timeout of {timeout}s for camera {camera_id}")
+        
+        is_available, backend = simple_manager.test_camera_simple(camera_id, timeout=timeout)
+        camera_info = simple_manager.get_camera_info_simple(camera_id, timeout=timeout)
         
         print(f"✅ Camera {camera_id} test completed: available={is_available}, backend={backend}")
         
@@ -290,6 +294,8 @@ def test_camera(camera_id):
             "camera_id": camera_id,
             "available": is_available,
             "info": camera_info,
+            "backend": backend,
+            "timeout_used": timeout,
             "timestamp": time.time()
         })
     except Exception as e:
@@ -303,30 +309,36 @@ def test_camera(camera_id):
 
 @app.route('/api/cameras/fast-test', methods=['GET'])
 def fast_camera_test():
-    """Fast camera test endpoint"""
+    """Fast camera test endpoint with extended timeouts"""
     try:
-        print("⚡ Fast camera test endpoint called...")
+        print("⚡ Fast camera test endpoint called with extended timeouts...")
         
-        from services.fast_camera_manager import FastCameraManager
-        fast_manager = FastCameraManager()
+        from services.simple_camera_manager import SimpleCameraManager
+        simple_manager = SimpleCameraManager()
         
         results = []
         for camera_id in range(3):
             print(f"⚡ Testing camera {camera_id}...")
             try:
-                success, backend = fast_manager.test_camera_fast(camera_id)
+                # Use longer timeout for camera 2, shorter for others
+                timeout = 90 if camera_id == 2 else 20
+                print(f"⏱️ Using timeout of {timeout}s for camera {camera_id}")
+                
+                success, backend = simple_manager.test_camera_simple(camera_id, timeout=timeout)
                 results.append({
                     "camera_id": camera_id,
                     "available": success,
-                    "backend": backend
+                    "backend": backend,
+                    "timeout_used": timeout
                 })
-                print(f"✅ Camera {camera_id}: {success} ({backend})")
+                print(f"✅ Camera {camera_id}: {success} ({backend}) - timeout: {timeout}s")
             except Exception as e:
                 print(f"❌ Camera {camera_id} exception: {e}")
                 results.append({
                     "camera_id": camera_id,
                     "available": False,
-                    "backend": f"Error: {e}"
+                    "backend": f"Error: {e}",
+                    "timeout_used": timeout if 'timeout' in locals() else 20
                 })
         
         print(f"✅ Fast camera test completed: {results}")
@@ -347,40 +359,38 @@ def fast_camera_test():
 
 @app.route('/api/cameras/simple-test', methods=['GET'])
 def simple_camera_test():
-    """Ultra-simple camera test endpoint"""
+    """Ultra-simple camera test endpoint with extended timeouts"""
     try:
-        print("🔧 Simple camera test endpoint called...")
+        print("🔧 Simple camera test endpoint called with extended timeouts...")
         
-        import cv2
+        from services.simple_camera_manager import SimpleCameraManager
+        simple_manager = SimpleCameraManager()
         
         results = []
         for camera_id in range(3):
             print(f"🔧 Simple test camera {camera_id}...")
             try:
-                # Ultra-simple test
-                cap = cv2.VideoCapture(camera_id)
-                if cap.isOpened():
-                    ret, frame = cap.read()
-                    cap.release()
-                    available = ret and frame is not None
-                    backend = "Simple"
-                else:
-                    available = False
-                    backend = "Failed to open"
+                # Use longer timeout for camera 2, shorter for others
+                timeout = 90 if camera_id == 2 else 20
+                print(f"⏱️ Using timeout of {timeout}s for camera {camera_id}")
+                
+                available, backend = simple_manager.test_camera_simple(camera_id, timeout=timeout)
                 
                 results.append({
                     "camera_id": camera_id,
                     "available": available,
-                    "backend": backend
+                    "backend": backend,
+                    "timeout_used": timeout
                 })
-                print(f"✅ Camera {camera_id}: {available} ({backend})")
+                print(f"✅ Camera {camera_id}: {available} ({backend}) - timeout: {timeout}s")
                 
             except Exception as e:
                 print(f"❌ Camera {camera_id} exception: {e}")
                 results.append({
                     "camera_id": camera_id,
                     "available": False,
-                    "backend": f"Error: {e}"
+                    "backend": f"Error: {e}",
+                    "timeout_used": timeout if 'timeout' in locals() else 20
                 })
         
         print(f"✅ Simple camera test completed: {results}")

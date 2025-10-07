@@ -14,8 +14,8 @@ class SimpleCameraManager:
         pass
     
     def test_camera_simple(self, camera_id: int, timeout: int = 5) -> Tuple[bool, str]:
-        """Test camera with simple approach (like simple_camera_test.py)"""
-        print(f"🧪 Testing camera {camera_id} (simple method)...")
+        """Test camera with simple approach and timeout support"""
+        print(f"🧪 Testing camera {camera_id} (simple method) with {timeout}s timeout...")
         
         # Try different backends (same as simple_camera_test.py)
         backends = [
@@ -29,31 +29,56 @@ class SimpleCameraManager:
             print(f"  🧪 Trying {name} backend...")
             
             try:
-                if backend is not None:
-                    cap = cv2.VideoCapture(camera_id, backend)
-                else:
-                    cap = cv2.VideoCapture(camera_id)
+                # Use threading with timeout to prevent hanging
+                result = [False, ""]
+                exception_occurred = [False]
                 
-                if cap.isOpened():
-                    print(f"    ✅ Camera {camera_id} opened with {name}")
-                    
-                    # Try to read a frame
-                    ret, frame = cap.read()
-                    if ret and frame is not None:
-                        print(f"    ✅ Camera {camera_id} can read frames: {frame.shape}")
-                        cap.release()
-                        return True, name
-                    else:
-                        print(f"    ❌ Camera {camera_id} cannot read frames with {name}")
-                    
-                    cap.release()
-                else:
-                    print(f"    ❌ Camera {camera_id} failed to open with {name}")
+                def test_backend():
+                    try:
+                        if backend is not None:
+                            cap = cv2.VideoCapture(camera_id, backend)
+                        else:
+                            cap = cv2.VideoCapture(camera_id)
+                        
+                        if cap.isOpened():
+                            print(f"    ✅ Camera {camera_id} opened with {name}")
+                            
+                            # Try to read a frame
+                            ret, frame = cap.read()
+                            if ret and frame is not None:
+                                print(f"    ✅ Camera {camera_id} can read frames: {frame.shape}")
+                                result[0] = True
+                                result[1] = name
+                            else:
+                                print(f"    ❌ Camera {camera_id} cannot read frames with {name}")
+                            
+                            cap.release()
+                        else:
+                            print(f"    ❌ Camera {camera_id} failed to open with {name}")
+                    except Exception as e:
+                        print(f"    ❌ Exception with {name}: {e}")
+                        exception_occurred[0] = True
+                
+                # Run test in thread with timeout
+                test_thread = threading.Thread(target=test_backend)
+                test_thread.daemon = True
+                test_thread.start()
+                test_thread.join(timeout=timeout)
+                
+                if test_thread.is_alive():
+                    print(f"    ⏰ Camera {camera_id} test timed out after {timeout}s with {name}")
+                    continue
+                
+                if exception_occurred[0]:
+                    continue
+                
+                if result[0]:
+                    return result[0], result[1]
                     
             except Exception as e:
                 print(f"    ❌ Exception with {name}: {e}")
         
-        return False, "All backends failed"
+        return False, "All backends failed or timed out"
     
     def initialize_camera_simple(self, camera_id: int, width: int = 640, height: int = 480, 
                                fps: int = 20, timeout: int = 10) -> Optional[cv2.VideoCapture]:
