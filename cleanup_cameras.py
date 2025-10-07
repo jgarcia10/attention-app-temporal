@@ -35,29 +35,30 @@ def cleanup_all_cameras():
     gc.collect()
     time.sleep(1)
     
-    # On Windows, try to reset camera drivers
+    # On Windows, try to reset camera drivers (simplified approach)
     if platform.system().lower() == "windows":
-        print("🔄 Resetting Windows camera drivers...")
+        print("🔄 Attempting Windows camera driver reset...")
         try:
+            # First, just list cameras without resetting
+            print("📋 Listing available cameras...")
             result = subprocess.run([
                 'powershell', '-Command',
-                '''
-                Get-PnpDevice -Class Camera | ForEach-Object {
-                    Write-Host "Resetting $($_.FriendlyName)..."
-                    Disable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false
-                    Start-Sleep -Seconds 1
-                    Enable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false
-                }
-                '''
-            ], capture_output=True, text=True, timeout=30)
+                'Get-PnpDevice -Class Camera | Select-Object FriendlyName, InstanceId | Format-Table -AutoSize'
+            ], capture_output=True, text=True, timeout=15)
             
             if result.returncode == 0:
-                print("✅ Windows camera drivers reset successfully")
+                print("✅ Camera listing successful:")
+                print(result.stdout)
             else:
-                print(f"⚠️ Could not reset Windows camera drivers: {result.stderr}")
+                print(f"⚠️ Could not list cameras: {result.stderr}")
+            
+            # Skip the reset for now - it's too risky and slow
+            print("⚠️ Skipping camera driver reset (too slow/risky)")
+            print("💡 Try manually closing any camera applications and restart the backend")
                 
         except Exception as e:
-            print(f"❌ Error resetting Windows camera drivers: {e}")
+            print(f"❌ Error with Windows camera commands: {e}")
+            print("💡 Try manually closing any camera applications and restart the backend")
     
     print("✅ Camera cleanup completed")
 

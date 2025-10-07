@@ -51,30 +51,19 @@ class RobustCameraManager:
             return False
     
     def _reset_windows_camera_driver(self, camera_id: int):
-        """Reset Windows camera driver"""
+        """Reset Windows camera driver (simplified)"""
         try:
-            print(f"🔄 Resetting Windows camera driver for camera {camera_id}...")
+            print(f"🔄 Attempting Windows camera driver reset for camera {camera_id}...")
             
-            # Try to disable and re-enable camera device
-            result = subprocess.run([
-                'powershell', '-Command',
-                f'''
-                $device = Get-PnpDevice -Class Camera | Select-Object -Index {camera_id}
-                if ($device) {{
-                    Disable-PnpDevice -InstanceId $device.InstanceId -Confirm:$false
-                    Start-Sleep -Seconds 2
-                    Enable-PnpDevice -InstanceId $device.InstanceId -Confirm:$false
-                }}
-                '''
-            ], capture_output=True, text=True, timeout=10)
+            # Skip the actual reset - it's too slow and risky
+            print(f"⚠️ Skipping Windows camera driver reset (too slow/risky)")
+            print(f"💡 Try manually closing any camera applications using camera {camera_id}")
             
-            if result.returncode == 0:
-                print(f"✅ Reset Windows camera driver for camera {camera_id}")
-            else:
-                print(f"⚠️ Could not reset Windows camera driver: {result.stderr}")
+            # Just wait a bit for any existing processes to release the camera
+            time.sleep(2)
                 
         except Exception as e:
-            print(f"❌ Error resetting Windows camera driver: {e}")
+            print(f"❌ Error with Windows camera driver reset: {e}")
     
     def test_camera_with_multiple_strategies(self, camera_id: int, timeout: int = 10) -> Tuple[bool, str]:
         """Test camera with multiple strategies"""
