@@ -6,7 +6,7 @@ const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost
 // Create axios instance
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
-  timeout: 120000, // Extended timeout for camera detection (2 minutes)
+  timeout: 180000, // Extended timeout for camera detection (3 minutes)
 });
 
 // Types

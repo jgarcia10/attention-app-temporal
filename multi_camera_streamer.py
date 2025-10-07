@@ -38,7 +38,7 @@ class MultiCameraStreamer:
     def _initialize_camera_with_timeout(self, camera_id: int, width: int, height: int, fps: int, timeout: int = 10) -> Optional[cv2.VideoCapture]:
         """Initialize camera with timeout to prevent hanging"""
         # Use longer timeout for camera 2, shorter for others
-        actual_timeout = 90 if camera_id == 2 else 30
+        actual_timeout = 180 if camera_id == 2 else 30
         print(f"⏱️ Initializing camera {camera_id} with {actual_timeout}s timeout...")
         
         def init_camera():
@@ -111,7 +111,7 @@ class MultiCameraStreamer:
                 print(f"🔧 Initializing camera {camera_id}...")
                 
                 # Initialize video capture with timeout (will use dynamic timeout based on camera ID)
-                cap = self._initialize_camera_with_timeout(camera_id, width, height, fps, timeout=90)
+                cap = self._initialize_camera_with_timeout(camera_id, width, height, fps, timeout=180)
                 
                 if cap is None:
                     print(f"❌ Failed to initialize camera {camera_id}")

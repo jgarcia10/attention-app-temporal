@@ -86,7 +86,7 @@ class SimpleCameraManager:
         print(f"🚀 Simple initialization of camera {camera_id}...")
         
         # Use longer timeout for camera 2, shorter for others
-        test_timeout = 90 if camera_id == 2 else 20
+        test_timeout = 180 if camera_id == 2 else 20
         print(f"⏱️ Using test timeout of {test_timeout}s for camera {camera_id}")
         
         # First test which backend works
@@ -141,7 +141,7 @@ class SimpleCameraManager:
         print(f"📋 Getting simple info for camera {camera_id}...")
         
         # Use longer timeout for camera 2, shorter for others
-        test_timeout = 90 if camera_id == 2 else 20
+        test_timeout = 180 if camera_id == 2 else 20
         print(f"⏱️ Using test timeout of {test_timeout}s for camera {camera_id}")
         
         # Test camera first

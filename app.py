@@ -282,7 +282,7 @@ def test_camera(camera_id):
         simple_manager = SimpleCameraManager()
         
         # Use longer timeout based on camera ID (camera 2 needs more time)
-        timeout = 30 if camera_id == 2 else 15
+        timeout = 180 if camera_id == 2 else 15
         print(f"⏱️ Using timeout of {timeout}s for camera {camera_id}")
         
         is_available, backend = simple_manager.test_camera_simple(camera_id, timeout=timeout)
@@ -321,7 +321,7 @@ def fast_camera_test():
             print(f"⚡ Testing camera {camera_id}...")
             try:
                 # Use longer timeout for camera 2, shorter for others
-                timeout = 90 if camera_id == 2 else 20
+                timeout = 180 if camera_id == 2 else 20
                 print(f"⏱️ Using timeout of {timeout}s for camera {camera_id}")
                 
                 success, backend = simple_manager.test_camera_simple(camera_id, timeout=timeout)
@@ -371,7 +371,7 @@ def simple_camera_test():
             print(f"🔧 Simple test camera {camera_id}...")
             try:
                 # Use longer timeout for camera 2, shorter for others
-                timeout = 90 if camera_id == 2 else 20
+                timeout = 180 if camera_id == 2 else 20
                 print(f"⏱️ Using timeout of {timeout}s for camera {camera_id}")
                 
                 available, backend = simple_manager.test_camera_simple(camera_id, timeout=timeout)

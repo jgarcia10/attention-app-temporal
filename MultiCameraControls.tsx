@@ -40,7 +40,7 @@ const MultiCameraControls: React.FC<MultiCameraControlsProps> = ({
       
       // Add timeout handling
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Camera detection timeout after 120 seconds')), 120000);
+        setTimeout(() => reject(new Error('Camera detection timeout after 180 seconds')), 180000);
       });
       
       const detectionPromise = apiService.getAvailableCameras();
@@ -59,7 +59,7 @@ const MultiCameraControls: React.FC<MultiCameraControlsProps> = ({
     } catch (error) {
       console.error('❌ Camera detection error:', error);
       if (error.message.includes('timeout')) {
-        onError('Camera detection is taking too long (2+ minutes). Some cameras may need more time to initialize. Please try again or check if cameras are being used by other applications.');
+        onError('Camera detection is taking too long (3+ minutes). Some cameras may need more time to initialize. Please try again or check if cameras are being used by other applications.');
       } else {
         onError(`Failed to detect cameras: ${error.message || error}`);
       }
