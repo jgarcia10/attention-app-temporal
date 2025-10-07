@@ -273,10 +273,19 @@ def get_all_available_cameras():
 
 @app.route('/api/cameras/<int:camera_id>/test', methods=['GET'])
 def test_camera(camera_id):
-    """Test if a specific camera is available"""
+    """Test if a specific camera is available (fast version)"""
     try:
-        is_available = camera_detector.test_camera(camera_id)
-        camera_info = camera_detector.get_camera_info(camera_id)
+        print(f"⚡ Fast test camera {camera_id}...")
+        
+        # Use fast camera manager
+        from services.fast_camera_manager import FastCameraManager
+        fast_manager = FastCameraManager()
+        
+        is_available, backend = fast_manager.test_camera_fast(camera_id)
+        camera_info = fast_manager.get_camera_info_fast(camera_id)
+        
+        print(f"✅ Camera {camera_id} test completed: available={is_available}, backend={backend}")
+        
         return jsonify({
             "camera_id": camera_id,
             "available": is_available,
@@ -284,8 +293,44 @@ def test_camera(camera_id):
             "timestamp": time.time()
         })
     except Exception as e:
+        print(f"❌ Error testing camera {camera_id}: {e}")
         return jsonify(ErrorResponse(
             error="CameraTestError",
+            message=str(e),
+            timestamp=time.time()
+        ).model_dump()), 500
+
+
+@app.route('/api/cameras/fast-test', methods=['GET'])
+def fast_camera_test():
+    """Fast camera test endpoint"""
+    try:
+        print("⚡ Fast camera test endpoint called...")
+        
+        from services.fast_camera_manager import FastCameraManager
+        fast_manager = FastCameraManager()
+        
+        results = []
+        for camera_id in range(3):
+            print(f"⚡ Testing camera {camera_id}...")
+            success, backend = fast_manager.test_camera_fast(camera_id)
+            results.append({
+                "camera_id": camera_id,
+                "available": success,
+                "backend": backend
+            })
+            print(f"✅ Camera {camera_id}: {success} ({backend})")
+        
+        print(f"✅ Fast camera test completed: {results}")
+        
+        return jsonify({
+            "cameras": results,
+            "timestamp": time.time()
+        })
+    except Exception as e:
+        print(f"❌ Error in fast camera test: {e}")
+        return jsonify(ErrorResponse(
+            error="FastCameraTestError",
             message=str(e),
             timestamp=time.time()
         ).model_dump()), 500
