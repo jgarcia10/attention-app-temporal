@@ -85,8 +85,12 @@ class SimpleCameraManager:
         """Initialize camera with simple approach"""
         print(f"🚀 Simple initialization of camera {camera_id}...")
         
+        # Use longer timeout for camera 2, shorter for others
+        test_timeout = 90 if camera_id == 2 else 20
+        print(f"⏱️ Using test timeout of {test_timeout}s for camera {camera_id}")
+        
         # First test which backend works
-        success, backend_name = self.test_camera_simple(camera_id, timeout=3)
+        success, backend_name = self.test_camera_simple(camera_id, timeout=test_timeout)
         
         if not success:
             print(f"❌ Camera {camera_id} failed simple test")
@@ -136,8 +140,12 @@ class SimpleCameraManager:
         """Get camera info with simple approach"""
         print(f"📋 Getting simple info for camera {camera_id}...")
         
+        # Use longer timeout for camera 2, shorter for others
+        test_timeout = 90 if camera_id == 2 else 20
+        print(f"⏱️ Using test timeout of {test_timeout}s for camera {camera_id}")
+        
         # Test camera first
-        success, backend_name = self.test_camera_simple(camera_id, timeout=3)
+        success, backend_name = self.test_camera_simple(camera_id, timeout=test_timeout)
         
         if not success:
             return {

@@ -37,13 +37,15 @@ class MultiCameraStreamer:
     
     def _initialize_camera_with_timeout(self, camera_id: int, width: int, height: int, fps: int, timeout: int = 10) -> Optional[cv2.VideoCapture]:
         """Initialize camera with timeout to prevent hanging"""
-        print(f"⏱️ Initializing camera {camera_id} with {timeout}s timeout...")
+        # Use longer timeout for camera 2, shorter for others
+        actual_timeout = 90 if camera_id == 2 else 30
+        print(f"⏱️ Initializing camera {camera_id} with {actual_timeout}s timeout...")
         
         def init_camera():
             try:
                 # Use simple camera manager for initialization
                 print(f"🚀 Using simple camera manager for camera {camera_id}...")
-                cap = self.simple_camera_manager.initialize_camera_simple(camera_id, width, height, fps, timeout)
+                cap = self.simple_camera_manager.initialize_camera_simple(camera_id, width, height, fps, actual_timeout)
                 
                 if cap:
                     print(f"✅ Camera {camera_id} initialized successfully with simple manager")
@@ -70,10 +72,10 @@ class MultiCameraStreamer:
         
         thread = threading.Thread(target=target, daemon=True)
         thread.start()
-        thread.join(timeout=timeout)
+        thread.join(timeout=actual_timeout)
         
         if thread.is_alive():
-            print(f"⏰ Camera {camera_id} initialization timed out after {timeout}s")
+            print(f"⏰ Camera {camera_id} initialization timed out after {actual_timeout}s")
             return None
         
         if exception[0]:
@@ -108,8 +110,8 @@ class MultiCameraStreamer:
             try:
                 print(f"🔧 Initializing camera {camera_id}...")
                 
-                # Initialize video capture with timeout
-                cap = self._initialize_camera_with_timeout(camera_id, width, height, fps, timeout=15)
+                # Initialize video capture with timeout (will use dynamic timeout based on camera ID)
+                cap = self._initialize_camera_with_timeout(camera_id, width, height, fps, timeout=90)
                 
                 if cap is None:
                     print(f"❌ Failed to initialize camera {camera_id}")
