@@ -231,10 +231,12 @@ class MultiCameraStreamer:
         print("Multi-camera streamer shutdown complete")
     
     def _camera_stream_loop(self, stream_info: Dict[str, Any]):
-        """Main streaming loop for a single camera (runs in separate thread)"""
+        """Main streaming loop for a single camera (runs in separate thread) - Optimized for Windows"""
         camera_id = stream_info['camera_id']
         cap = stream_info['cap']
         frame_time = 1.0 / stream_info['fps']
+        frame_count = 0
+        skip_frames = 2  # Process every 3rd frame for better performance
         
         try:
             while stream_info['is_streaming'] and cap.isOpened():
@@ -246,21 +248,38 @@ class MultiCameraStreamer:
                         print(f"Camera {camera_id}: Failed to read frame, stopping stream")
                         break
                     
-                    # Submit frame to isolated processor for this camera
-                    stream_info['processor'].submit_frame(
-                        frame, stream_info['width'], stream_info['height']
-                    )
+                    frame_count += 1
                     
-                    # Get latest result from isolated processor
-                    annotated_frame, stats = stream_info['processor'].get_latest_result()
-                    if annotated_frame is not None and stats is not None:
-                        # Update latest frame and stats (thread-safe)
-                        with stream_info['frame_lock']:
-                            stream_info['latest_frame'] = annotated_frame
-                            stream_info['latest_stats'] = stats
+                    # Skip frames for better performance (process every 3rd frame)
+                    if frame_count % (skip_frames + 1) == 0:
+                        # Submit frame to isolated processor for this camera with lower resolution
+                        processing_width = min(stream_info['width'], 320)  # Limit processing resolution
+                        processing_height = min(stream_info['height'], 240)
                         
-                        # Update aggregated stats
-                        self._update_aggregated_stats(stats)
+                        stream_info['processor'].submit_frame(
+                            frame, processing_width, processing_height
+                        )
+                        
+                        # Get latest result from isolated processor
+                        annotated_frame, stats = stream_info['processor'].get_latest_result()
+                        if annotated_frame is not None and stats is not None:
+                            # Resize back to original resolution for display
+                            if processing_width != stream_info['width'] or processing_height != stream_info['height']:
+                                annotated_frame = cv2.resize(annotated_frame, (stream_info['width'], stream_info['height']))
+                            
+                            # Update latest frame and stats (thread-safe)
+                            with stream_info['frame_lock']:
+                                stream_info['latest_frame'] = annotated_frame
+                                stream_info['latest_stats'] = stats
+                            
+                            # Update aggregated stats
+                            self._update_aggregated_stats(stats)
+                    else:
+                        # Use previous frame for skipped frames
+                        with stream_info['frame_lock']:
+                            if stream_info['latest_frame'] is not None:
+                                # Keep using the previous frame
+                                pass
                     
                     # Maintain target FPS
                     elapsed = time.time() - start_time
@@ -431,9 +450,10 @@ class MultiCameraStreamer:
                         for recording_id in active_recordings:
                             self.write_recording_frame(recording_id, camera_frames, aggregated_stats)
                     
-                    # Encode frame as JPEG
+                    # Encode frame as JPEG with optimized quality for Windows
+                    jpeg_quality = 70  # Lower quality for faster streaming
                     ret, buffer = cv2.imencode('.jpg', combined_frame, 
-                                             [cv2.IMWRITE_JPEG_QUALITY, 80])
+                                             [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
                     
                     if ret:
                         frame_bytes = buffer.tobytes()
@@ -443,7 +463,7 @@ class MultiCameraStreamer:
                                b'Content-Type: image/jpeg\r\n\r\n' + 
                                frame_bytes + b'\r\n')
                 
-                time.sleep(0.033)  # ~30 FPS max for streaming
+                time.sleep(0.067)  # ~15 FPS max for streaming (optimized for Windows)
                 
             except Exception as e:
                 print(f"Error in multi-camera MJPEG generator: {e}")

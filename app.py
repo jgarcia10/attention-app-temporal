@@ -35,14 +35,19 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 os.makedirs('./models', exist_ok=True)
 
 # Global configuration (can be updated via API)
+# Optimized for Windows performance
 config = {
     'yolo_model_path': os.getenv('YOLO_MODEL_PATH', './models/yolov8n.pt'),
     'conf_threshold': float(os.getenv('CONF_THRESHOLD', '0.4')),
     'yaw_threshold': float(os.getenv('YAW_T', '25')),
     'pitch_threshold': float(os.getenv('PITCH_T', '20')),
-    'stream_width': int(os.getenv('STREAM_WIDTH', '1280')),
-    'stream_height': int(os.getenv('STREAM_HEIGHT', '720')),
-    'stream_fps': int(os.getenv('STREAM_FPS', '20'))
+    'stream_width': int(os.getenv('STREAM_WIDTH', '640')),  # Reduced for better performance
+    'stream_height': int(os.getenv('STREAM_HEIGHT', '480')),  # Reduced for better performance
+    'stream_fps': int(os.getenv('STREAM_FPS', '15')),  # Reduced FPS for Windows
+    'processing_width': int(os.getenv('PROCESSING_WIDTH', '320')),  # Lower resolution for AI processing
+    'processing_height': int(os.getenv('PROCESSING_HEIGHT', '240')),  # Lower resolution for AI processing
+    'skip_frames': int(os.getenv('SKIP_FRAMES', '2')),  # Process every 3rd frame for better performance
+    'jpeg_quality': int(os.getenv('JPEG_QUALITY', '70'))  # Lower quality for faster streaming
 }
 
 # Initialize pipeline and services
